@@ -29,10 +29,21 @@ The AppDev team selected SQLModel because of prior experience using it in a simi
 
 ## Repository Structure
 
-database.py # MySQL engine configuration and session management
-models.py # SQLModel schema definitions (tables and relationships)
-migrate_schema.py # Controlled schema rebuild script
-stored_procs.sql # Starter stored procedures (basic CRUD operations)
+database.py
+
+# MySQL engine configuration and session management
+
+models.py
+
+# SQLModel schema definitions (tables and relationships)
+
+migrate_schema.py
+
+# Controlled schema rebuild script
+
+stored_procs.sql
+
+# Starter stored procedures (basic CRUD operations)
 
 ---
 
