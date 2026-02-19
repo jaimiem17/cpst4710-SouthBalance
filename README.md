@@ -4,7 +4,7 @@
 
 This repository contains the database implementation for the South Balance AAFES Order Management MVP.
 
-The database was designed based on the project ERD and user flow diagram and implemented using **MySQL** with **SQLModel** as the ORM layer.
+The database was designed based on the project ERD and user flow diagram and implemented using MySQL with SQLModel as the ORM layer.
 
 ---
 
@@ -29,21 +29,10 @@ The AppDev team selected SQLModel because of prior experience using it in a simi
 
 ## Repository Structure
 
-database.py
-
-# MySQL engine configuration and session management
-
-models.py
-
-# SQLModel schema definitions (tables and relationships)
-
-migrate_schema.py
-
-# Controlled schema rebuild script
-
-stored_procs.sql
-
-# Starter stored procedures (basic CRUD operations)
+database.py # MySQL engine configuration and session management
+models.py # SQLModel schema definitions (tables and relationships)
+migrate_schema.py # Controlled schema rebuild script
+stored_procs.sql # Starter stored procedures (basic CRUD operations)
 
 ---
 
