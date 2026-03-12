@@ -1,24 +1,28 @@
 import React from 'react';
 
-export default function Inventory() {
+export default function Logs() {
   return (
     <div className="page-container">
-      <h1 style={{ marginBottom: '25px', color: '#2c3e50' }}>Inventory</h1>
-
+      <h1 style={{ marginBottom: '25px', color: '#2c3e50' }}>Logs</h1>
+      
       <div className="card">
         <table className="data-table">
           <thead>
             <tr>
-              <th>ProductID</th>
-              <th>Product Name</th>
-              <th>Current Quantity</th>
+              <th>LogID</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Account</th>
+              <th>Description</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>-</td>
               <td>-</td>
-              <td>0</td>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
             </tr>
           </tbody>
         </table>
