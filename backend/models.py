@@ -6,7 +6,7 @@ from typing import Optional, List
 from uuid import uuid4
 
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, String, Boolean, Integer, DECIMAL, TIMESTAMP
+from sqlalchemy import Column, String, Boolean, Integer, DECIMAL, TIMESTAMP, ForeignKey
 from sqlalchemy.sql import func
 
 
@@ -19,7 +19,6 @@ class UserAccount(SQLModel, table=True):
 
     account_id: str = Field(
         default_factory=uuid_str,
-        primary_key=True,
         sa_column=Column(String(36), primary_key=True),
     )
     username: str = Field(sa_column=Column(String(100), unique=True, nullable=False))
@@ -37,7 +36,7 @@ class UserAccount(SQLModel, table=True):
 class AAFESDistributionCenter(SQLModel, table=True):
     __tablename__ = "aafes_distribution_center"
 
-    dc_id: str = Field(default_factory=uuid_str, primary_key=True, sa_column=Column(String(36), primary_key=True))
+    dc_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
     facility_name: str = Field(sa_column=Column(String(200), nullable=False))
     address1: str = Field(sa_column=Column(String(200), nullable=False))
     address2: Optional[str] = Field(default=None, sa_column=Column(String(200), nullable=True))
@@ -52,7 +51,7 @@ class AAFESDistributionCenter(SQLModel, table=True):
 class ProductItem(SQLModel, table=True):
     __tablename__ = "product_item"
 
-    product_id: str = Field(default_factory=uuid_str, primary_key=True, sa_column=Column(String(36), primary_key=True))
+    product_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
     product_name: str = Field(sa_column=Column(String(200), nullable=False))
     base_cost: float = Field(sa_column=Column(DECIMAL(10, 2), nullable=False))
     is_active: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default="1"))
@@ -63,7 +62,7 @@ class ProductItem(SQLModel, table=True):
 class ProductColor(SQLModel, table=True):
     __tablename__ = "product_color"
 
-    color_id: str = Field(default_factory=uuid_str, primary_key=True, sa_column=Column(String(36), primary_key=True))
+    color_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
     color_name: str = Field(sa_column=Column(String(100), unique=True, nullable=False))
 
     inventory_rows: List["InventoryStock"] = Relationship(back_populates="color")
@@ -72,7 +71,7 @@ class ProductColor(SQLModel, table=True):
 class CustomOption(SQLModel, table=True):
     __tablename__ = "custom_option"
 
-    custom_id: str = Field(default_factory=uuid_str, primary_key=True, sa_column=Column(String(36), primary_key=True))
+    custom_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
     custom_type: str = Field(sa_column=Column(String(50), nullable=False))  # patriotic / branch
     branch_name: Optional[str] = Field(default=None, sa_column=Column(String(150), nullable=True))
     added_charge: float = Field(default=0.0, sa_column=Column(DECIMAL(10, 2), nullable=False, server_default="0.00"))
@@ -83,9 +82,9 @@ class CustomOption(SQLModel, table=True):
 class InventoryStock(SQLModel, table=True):
     __tablename__ = "inventory_stock"
 
-    stock_id: str = Field(default_factory=uuid_str, primary_key=True, sa_column=Column(String(36), primary_key=True))
-    product_id: str = Field(foreign_key="product_item.product_id", sa_column=Column(String(36), nullable=False))
-    color_id: str = Field(foreign_key="product_color.color_id", sa_column=Column(String(36), nullable=False))
+    stock_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
+    product_id: str = Field(sa_column=Column(String(36), ForeignKey("product_item.product_id"), nullable=False))
+    color_id: str = Field(sa_column=Column(String(36), ForeignKey("product_color.color_id"), nullable=False))
 
     quantity_available: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     last_updated_at: datetime = Field(
@@ -101,9 +100,9 @@ class InventoryStock(SQLModel, table=True):
 class OrderHeader(SQLModel, table=True):
     __tablename__ = "order_header"
 
-    order_id: str = Field(default_factory=uuid_str, primary_key=True, sa_column=Column(String(36), primary_key=True))
-    account_id: str = Field(foreign_key="user_account.account_id", sa_column=Column(String(36), nullable=False))
-    dc_id: str = Field(foreign_key="aafes_distribution_center.dc_id", sa_column=Column(String(36), nullable=False))
+    order_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
+    account_id: str = Field(sa_column=Column(String(36), ForeignKey("user_account.account_id"), nullable=False))
+    dc_id: str = Field(sa_column=Column(String(36), ForeignKey("aafes_distribution_center.dc_id"), nullable=False))
 
     order_date: datetime = Field(
         default_factory=datetime.utcnow,
@@ -121,10 +120,10 @@ class OrderHeader(SQLModel, table=True):
 class OrderItem(SQLModel, table=True):
     __tablename__ = "order_item"
 
-    detail_id: str = Field(default_factory=uuid_str, primary_key=True, sa_column=Column(String(36), primary_key=True))
-    order_id: str = Field(foreign_key="order_header.order_id", sa_column=Column(String(36), nullable=False))
-    stock_id: str = Field(foreign_key="inventory_stock.stock_id", sa_column=Column(String(36), nullable=False))
-    custom_id: Optional[str] = Field(default=None, foreign_key="custom_option.custom_id", sa_column=Column(String(36), nullable=True))
+    detail_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
+    order_id: str = Field(sa_column=Column(String(36), ForeignKey("order_header.order_id"), nullable=False))
+    stock_id: str = Field(sa_column=Column(String(36), ForeignKey("inventory_stock.stock_id"), nullable=False))
+    custom_id: Optional[str] = Field(default=None, sa_column=Column(String(36), ForeignKey("custom_option.custom_id"), nullable=True))
 
     quantity_ordered: int = Field(sa_column=Column(Integer, nullable=False))
     calculated_item_cost: float = Field(default=0.0, sa_column=Column(DECIMAL(12, 2), nullable=False, server_default="0.00"))

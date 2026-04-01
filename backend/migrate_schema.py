@@ -4,12 +4,17 @@ South Balance Schema Migration Script
 Drops and recreates all tables using SQLModel (MySQL)
 """
 
-import sys
+import sys, os
+import models as models  # noqa: F401
 from sqlmodel import Session, text, SQLModel
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
 from database import engine
 
 # IMPORTANT: import all models so SQLModel.metadata knows about them
-import models  # noqa: F401
+import models as models  # noqa: F401
 
 
 def migrate_database() -> bool:

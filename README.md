@@ -76,3 +76,61 @@ To rebuild the schema during development:
 ```bash
 python migrate_schema.py
 ```
+
+## Run Instructions
+
+### 1. Backend (FastAPI + SQLModel)
+
+1. Create and activate virtual environment
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+2. Install Python dependencies
+
+```bash
+pip install --upgrade pip
+pip install fastapi uvicorn sqlmodel mysql-connector-python pydantic-settings
+```
+
+3. Set DB settings in `backend/core/settings.py` (or `.env`):
+
+```text
+db_user=root
+db_password=yourpass
+db_host=127.0.0.1
+db_port=3306
+db_name=south_balance_aafes_mvp
+```
+
+4. Create MySQL schema and run migration
+
+```bash
+mysql -u root -p
+CREATE DATABASE south_balance_aafes_mvp;
+exit
+PYTHONPATH="$PWD" python migrate_schema.py
+```
+
+5. Run API server
+
+```bash
+PYTHONPATH="$PWD" uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Check: `http://127.0.0.1:8000/docs`
+
+### 2. Frontend (React)
+
+Install and start
+
+```bash
+cd ui
+npm install
+npm start
+```
+
+Open: `http://localhost:3000`
