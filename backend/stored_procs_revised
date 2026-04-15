@@ -1,0 +1,67 @@
+-- This file contains stored procedures for the South Balance AAFES MVP.
+-- Add new procedures or enhance existing ones below.
+
+-- --- STARTER PROCEDURES (Example placeholders, actual content may vary) ---
+/*
+DELIMITER $$
+
+-- Example: Procedure to create a new user
+CREATE PROCEDURE create_user(
+    IN p_username VARCHAR(255),
+    IN p_email VARCHAR(255),
+    IN p_hashed_password VARCHAR(255)
+)
+BEGIN
+    INSERT INTO user_account (username, email, hashed_password)
+    VALUES (p_username, p_email, p_hashed_password);
+END$$
+
+DELIMITER ;
+*/
+
+-- --- ENHANCED PROCEDURES ---
+
+DELIMITER $$
+
+-- Procedure to retrieve detailed information for a specific order,
+-- including all its associated items and product details.
+-- This enhances basic order retrieval by nesting item details.
+CREATE PROCEDURE get_detailed_order_by_id(IN p_order_id INT)
+BEGIN
+    SELECT
+        oh.order_id,
+        oh.user_id,
+        oh.order_date,
+        oh.status,
+        -- You can add more relevant fields from order_header here if they exist and are needed
+        -- oh.shipping_address,
+        -- oh.billing_address,
+        -- oh.total_amount,
+
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'order_item_id', oi.order_item_id,
+                'product_id', oi.product_id,
+                'product_name', pi.name, -- Assumes product_item table has a 'name' column
+                'quantity', oi.quantity,
+                'price_at_order', oi.price_at_order,
+                'custom_options_applied', oi.custom_options_applied
+                -- Add other relevant fields from order_item if they exist
+                -- 'item_total', (oi.quantity * oi.price_at_order)
+            )
+        ) AS items
+    FROM
+        order_header AS oh
+    JOIN
+        order_item AS oi ON oh.order_id = oi.order_id
+    LEFT JOIN -- Using LEFT JOIN in case product details are not strictly required for an order item
+        product_item AS pi ON oi.product_id = pi.product_id
+    WHERE
+        oh.order_id = p_order_id
+    GROUP BY
+        oh.order_id, oh.user_id, oh.order_date, oh.status -- Group by all non-aggregated fields from order_header
+    ORDER BY
+        oh.order_date DESC; -- Ordering the main order result
+END$$
+
+DELIMITER ;
