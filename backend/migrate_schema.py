@@ -5,6 +5,7 @@ Drops and recreates all tables using SQLModel (MySQL)
 """
 
 import sys, os
+import logging
 import models as models  # noqa: F401
 from sqlmodel import Session, text, SQLModel
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -15,6 +16,8 @@ from database import engine
 
 # IMPORTANT: import all models so SQLModel.metadata knows about them
 import models as models  # noqa: F401
+
+logger = logging.getLogger(__name__)
 
 
 def migrate_database() -> bool:
@@ -46,13 +49,14 @@ def migrate_database() -> bool:
             with Session(engine) as session:
                 session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
                 session.commit()
-        except:
-            pass
+        except Exception:
+            logger.exception("Failed to re-enable foreign key checks after migration failure")
         print(f"Migration failed: {e}")
         return False
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     print("=" * 60)
     print("SOUTH BALANCE AAFES MVP - SCHEMA MIGRATION")
     print("=" * 60)

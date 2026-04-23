@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import secrets
+from decimal import Decimal
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Session, select
 
 from database import get_session, init_db
@@ -18,6 +22,7 @@ from models import (
 )
 from schemas import (
     UserCreate,
+    UserRead,
     DistributionCenterCreate,
     ProductCreate,
     ProductColorCreate,
@@ -28,6 +33,22 @@ from schemas import (
     OrderStatusUpdate,
     OrderItemCreate,
 )
+
+
+PASSWORD_HASH_ITERATIONS = 600_000
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt,
+        PASSWORD_HASH_ITERATIONS,
+    )
+    encoded_salt = base64.b64encode(salt).decode("ascii")
+    encoded_digest = base64.b64encode(digest).decode("ascii")
+    return f"pbkdf2_sha256${PASSWORD_HASH_ITERATIONS}${encoded_salt}${encoded_digest}"
 
 
 app = FastAPI(
@@ -79,7 +100,7 @@ def create_user(user: UserCreate, session: Session = Depends(get_session)):
     db_user = UserAccount(
         account_id=str(uuid4()),
         username=user.username,
-        password_hash=user.password_hash,
+        password_hash=hash_password(user.password),
         role=user.role,
         is_active=True,
     )
@@ -90,9 +111,13 @@ def create_user(user: UserCreate, session: Session = Depends(get_session)):
     return {"message": "User created", "account_id": db_user.account_id}
 
 
-@app.get("/users")
-def get_users(session: Session = Depends(get_session)):
-    return session.exec(select(UserAccount)).all()
+@app.get("/users", response_model=list[UserRead])
+def get_users(
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=100),
+    session: Session = Depends(get_session),
+):
+    return session.exec(select(UserAccount).offset(offset).limit(limit)).all()
 
 
 #   Distribution Centers  
@@ -272,7 +297,7 @@ def create_order(order: OrderCreate, session: Session = Depends(get_session)):
         dc_id=order.dc_id,
         contact_email=order.contact_email,
         status=order.status,
-        total_cost=0.0,
+        total_cost=Decimal("0.00"),
     )
     session.add(db_order)
     session.commit()
@@ -342,16 +367,18 @@ def create_order_item(item: OrderItemCreate, session: Session = Depends(get_sess
 
     stock.quantity_available -= item.quantity_ordered
 
+    item_cost = item.calculated_item_cost
+
     db_item = OrderItem(
         detail_id=str(uuid4()),
         order_id=item.order_id,
         stock_id=item.stock_id,
         custom_id=item.custom_id,
         quantity_ordered=item.quantity_ordered,
-        calculated_item_cost=item.calculated_item_cost,
+        calculated_item_cost=item_cost,
     )
 
-    order.total_cost += item.calculated_item_cost
+    order.total_cost = (order.total_cost or Decimal("0.00")) + item_cost
 
     session.add(stock)
     session.add(db_item)

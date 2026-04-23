@@ -1,7 +1,5 @@
-# southbalance_models.py
-from __future__ import annotations
-
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional, List
 from uuid import uuid4
 
@@ -53,7 +51,7 @@ class ProductItem(SQLModel, table=True):
 
     product_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
     product_name: str = Field(sa_column=Column(String(200), nullable=False))
-    base_cost: float = Field(sa_column=Column(DECIMAL(10, 2), nullable=False))
+    base_cost: Decimal = Field(sa_column=Column(DECIMAL(10, 2), nullable=False))
     is_active: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default="1"))
 
     inventory_rows: List["InventoryStock"] = Relationship(back_populates="product")
@@ -74,7 +72,10 @@ class CustomOption(SQLModel, table=True):
     custom_id: str = Field(default_factory=uuid_str, sa_column=Column(String(36), primary_key=True))
     custom_type: str = Field(sa_column=Column(String(50), nullable=False))  # patriotic / branch
     branch_name: Optional[str] = Field(default=None, sa_column=Column(String(150), nullable=True))
-    added_charge: float = Field(default=0.0, sa_column=Column(DECIMAL(10, 2), nullable=False, server_default="0.00"))
+    added_charge: Decimal = Field(
+        default=Decimal("0.00"),
+        sa_column=Column(DECIMAL(10, 2), nullable=False, server_default="0.00"),
+    )
 
     order_items: List["OrderItem"] = Relationship(back_populates="custom_option")
 
@@ -110,7 +111,10 @@ class OrderHeader(SQLModel, table=True):
     )
     status: str = Field(sa_column=Column(String(50), nullable=False))
     contact_email: str = Field(sa_column=Column(String(200), nullable=False))
-    total_cost: float = Field(default=0.0, sa_column=Column(DECIMAL(12, 2), nullable=False, server_default="0.00"))
+    total_cost: Decimal = Field(
+        default=Decimal("0.00"),
+        sa_column=Column(DECIMAL(12, 2), nullable=False, server_default="0.00"),
+    )
 
     account: UserAccount = Relationship(back_populates="orders")
     distribution_center: AAFESDistributionCenter = Relationship(back_populates="orders")
@@ -126,7 +130,10 @@ class OrderItem(SQLModel, table=True):
     custom_id: Optional[str] = Field(default=None, sa_column=Column(String(36), ForeignKey("custom_option.custom_id"), nullable=True))
 
     quantity_ordered: int = Field(sa_column=Column(Integer, nullable=False))
-    calculated_item_cost: float = Field(default=0.0, sa_column=Column(DECIMAL(12, 2), nullable=False, server_default="0.00"))
+    calculated_item_cost: Decimal = Field(
+        default=Decimal("0.00"),
+        sa_column=Column(DECIMAL(12, 2), nullable=False, server_default="0.00"),
+    )
 
     order: OrderHeader = Relationship(back_populates="items")
     stock: InventoryStock = Relationship(back_populates="order_items")
